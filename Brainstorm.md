@@ -16,8 +16,10 @@ Preliminary steps (rough steps, very high level)
 
 Scrape data:
 - Are there restrictions to external js libraries (outside of d3)?
-- Stream data (process rows 1 by 1) or Compile data all at once and then process
-    - Thinking of going for all at once, since to map out manager relations we need to know the whole picture
+- <s>Stream data</s> (process rows 1 by 1) or Compile data all at once and then process
+    - Thinking of compile data all at once to map out manager relations we need to know the whole picture
+
+
 
 
 <ins>**How to determine who's a child of who**</ins>
@@ -28,6 +30,8 @@ Create a hashmap storing {employeeID : manager}
 Less # of managers --> higher up person is in tree
 
 Manager = 0 --> person is at the top (CEO, CTO, etc.)
+Manager > 0 --> person must not be a root, has to report to at least one other person
+
 
 
 
