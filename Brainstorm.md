@@ -14,6 +14,27 @@ Preliminary steps (rough steps, very high level)
 3. Display data in tree format using d3-hierarchy
 
 
+Scrape data:
+- Are there restrictions to external js libraries (outside of d3)?
+- Stream data (process rows 1 by 1) or Compile data all at once and then process
+    - Thinking of going for all at once, since to map out manager relations we need to know the whole picture
+
+
+<ins>**How to determine who's a child of who**</ins>
+Rely on manager column (# of manager a given employee has) and the unique employeeID
+
+Create a hashmap storing {employeeID : manager}
+
+Less # of managers --> higher up person is in tree
+
+Manager = 0 --> person is at the top (CEO, CTO, etc.)
+
+
+
+
+
+
+
 
 # Important reference material: 
 
