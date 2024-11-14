@@ -1,7 +1,11 @@
 // This helper file aims to parse data from the csv and store it in a json format
 
 import Papa from 'papaparse';
-import { M } from 'vite/dist/node/types.d-aGj9QkWt';
+import { useDataStore } from './stores/globalDataStore';
+
+
+const dataStore = useDataStore();
+
 
 Papa.parse("../csv_data/30k_ppl.csv", {
     download: true,
@@ -9,8 +13,12 @@ Papa.parse("../csv_data/30k_ppl.csv", {
     worker: true, //enable worker thread for better performance
     complete: function(results) {
         const data = results.data;
-        flatToNested(data);
+        const nestedData = flatToNested(data);
         console.log("finished processing all 30k people")
+        
+        dataStore.setNestedData(nestedData);
+        console.log("Nested Data stored in Pinia")
+        //Store the nestedData in Vue global state w/ Pinia
     } 
 })
 
@@ -32,19 +40,22 @@ function flatToNested(flatData) {
     });
 
 
-    let root = null;
-    flatData.forEach(element => {
-        const e_node = LUT[element["Employee Id"]]; // a certain employee's node
-        if (element.Manager) {
-            
-            //if the employee's manager field is not blank nor empty, it must be a child node
+    let rootNode = null;
+
+    flatData.forEach(employee => {
+        if (!employee.Manager) {
+            // node must be root of organization (CEO)
+            rootNode = LUT[0]; //CEO Employee ID === 0 (Joan Telyer)
         }
-    })
-    //To build hierarchy, look at 
+        else {
+            const managerNode = LUT[employee.Manager]; //look up the employee ID of mananager
+            if (managerNode) {
+                managerNode.children.push(LUT[employee["Employee Id"]]);
+            }
+        }
+    });
 
-
-    
-    
+    return rootNode;
 }
 
 

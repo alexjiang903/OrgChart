@@ -23,21 +23,12 @@ Scrape data:
 
 
 <ins>**How to determine who's a child of who**</ins>
-Rely on manager column (# of manager a given employee has) and the unique employeeID
+
+Rely on <s> manager column </s> and the unique employeeID
 
 Create a hashmap storing {employeeID : manager}
 
-Less # of managers --> higher up person is in tree
-
-Manager = 0 --> person is at the top (CEO, CTO, etc.)
-Manager > 0 --> person must not be a root, has to report to at least one other person
-
-
-
-
-
-
-
+Manager field identifies the specific employee ID that the employee has a manager to. 
 
 
 # Important reference material: 
@@ -59,7 +50,26 @@ Sum of salaries of all children under a given person. Total cost = IC cost + Man
 
 <ins>**Management Cost Ratio**</ins>
 
-Ratio of CI/CM 
+Ratio of CI/CM.
+
+
+# Scratchpad
+
+
+```js
+
+//Flat JSON will look like this (after Papa parse):
+[{"Employee ID": 0, "Name":"John York", "Job Title": "CEO", ...} , {"Employee ID": 1, "Name":"John Pork", "Job Title": "CTO", ...}, ...]
+
+```
+
+
+**Employee ID = 0 => CEO of organization**
+
+All people in the csv are sorted by Employee ID. The lower the employee ID, the higher up the person is the company's hierarchy.
+
+
+
 
 
 
