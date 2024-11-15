@@ -6,21 +6,29 @@ import { useDataStore } from './stores/globalDataStore';
 
 const dataStore = useDataStore();
 
+const filePath = "../csv_data/30k_ppl.csv";
 
-Papa.parse("../csv_data/30k_ppl.csv", {
-    download: true,
-    header: true,
-    worker: true, //enable worker thread for better performance
-    complete: function(results) {
-        const data = results.data;
-        const nestedData = flatToNested(data);
-        console.log("finished processing all 30k people")
-        
-        dataStore.setNestedData(nestedData);
-        console.log("Nested Data stored in Pinia")
-        //Store the nestedData in Vue global state w/ Pinia
-    } 
-})
+function parseCSV(filePath) {
+    return new Promise((resolve, reject) => {
+        Papa.parse(filePath, {
+            download: true,
+            header: true,
+            worker: true, //enable worker thread for better performance
+            complete: function(results) {
+                const flatData = results.data;
+                const nestedData = flatToNested(flatData);
+
+                dataStore.setNestedData(nestedData);  //Store the nestedData in Vue global state w/ Pinia
+                console.log("Nested Data stored in Pinia")
+                console.log("finished processing all 30k employees")
+                resolve(nestedData);
+            },
+            error: function(err) {
+                reject(err);
+            }
+        });
+    })
+}
 
 
 function flatToNested(flatData) {
