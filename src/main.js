@@ -31,6 +31,7 @@ const AppContent = {
         //Once app mounted then retrieve the data from the JSON
         const dataStore = useDataStore();
         await parseCSV;
+        console.log(dataStore.nestedData)
         this.JSONTree = dataStore.nestedData?.["Employee ID"] ||  null;
     }
 };
