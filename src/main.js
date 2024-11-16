@@ -6,6 +6,7 @@ import { createPinia } from 'pinia'
 import { useDataStore } from './stores/globalDataStore';
 //import App from './App.vue'
 import router from './router';
+import parseCSV from './parser'
 
 const DispData = {
     JSONTree: Object
@@ -15,7 +16,7 @@ const DispData = {
 const AppContent = {
     template: `
         <div>
-            <h1> All Employees </h1>
+            <h1> All Employees hahahahahah </h1>
             <pre>{{JSONTree}}</pre>
         </div>
     `,
@@ -26,10 +27,11 @@ const AppContent = {
         };
     },
 
-    mounted() {
+    async mounted() {
         //Once app mounted then retrieve the data from the JSON
         const dataStore = useDataStore();
-        this.JSONTree = dataStore.nestedData["Employee ID"];
+        await parseCSV;
+        this.JSONTree = dataStore.nestedData?.["Employee ID"] ||  null;
     }
 };
 
@@ -42,5 +44,11 @@ const App = {
 const app = createApp(App)
 app.use(createPinia())
 app.use(router)
-app.mount('#app') // mounts the unique identifier associated with app in HTML 
+
+parseCSV().then(() => {
+    app.mount('#app'); // mounts the unique identifier associated with app in HTML 
+}).catch((err) => {
+    console.log("error parsing:", err);
+})
+
 

@@ -3,24 +3,23 @@
 import Papa from 'papaparse';
 import { useDataStore } from './stores/globalDataStore';
 
-
-const dataStore = useDataStore();
-
-const filePath = "../csv_data/30k_ppl.csv";
-
-function parseCSV(filePath) {
+function parseCSV() {
     return new Promise((resolve, reject) => {
-        Papa.parse(filePath, {
+        console.log("log start")
+        Papa.parse("/csv_data/30k_ppl.csv", {
             download: true,
             header: true,
             worker: true, //enable worker thread for better performance
             complete: function(results) {
                 const flatData = results.data;
                 const nestedData = flatToNested(flatData);
-
+                const dataStore = useDataStore();
+                
                 dataStore.setNestedData(nestedData);  //Store the nestedData in Vue global state w/ Pinia
+                
                 console.log("Nested Data stored in Pinia")
                 console.log("finished processing all 30k employees")
+                console.log("test")
                 resolve(nestedData);
             },
             error: function(err) {
@@ -65,5 +64,7 @@ function flatToNested(flatData) {
 
     return rootNode;
 }
+
+export default parseCSV;
 
 
