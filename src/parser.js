@@ -3,17 +3,26 @@
 import Papa from 'papaparse';
 import { useDataStore } from './stores/globalDataStore';
 
+//import fs from 'fs';
+//var fs = require('fs');
+
+// ^ no fs this is reserved for server side processing, can't be used to render data onto a page. 
 
 function parseCSV() {
     return new Promise((resolve, reject) => {
         console.log("log start")
         
-        Papa.parse("/csv_data/testing_data.csv", {
+        Papa.parse(content, {
             header: true,
             worker: true, //enable worker thread for better performance
-            //delimiter: ',',
+            delimiter: ',',
             complete: function(results) {
-                console.log("log results", results)
+              //  console.log("log results", results)
+
+                if (results.data.length === 0) {
+                    console.log("no data found!") //This gets triggered ...
+                }
+
                 const flatData = results.data;
                 const nestedData = flatToNested(flatData);
                 const dataStore = useDataStore();
@@ -22,7 +31,6 @@ function parseCSV() {
                 
                 console.log("Nested Data stored in Pinia")
                 console.log("finished processing all 30k employees")
-               // console.log("test")
 
                 resolve(nestedData);
             },
