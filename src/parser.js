@@ -12,7 +12,7 @@ function parseCSV() {
     return new Promise((resolve, reject) => {
         console.log("log start")
         
-        Papa.parse(content, {
+        Papa.parse("/csv_data/testing_data.csv", {
             header: true,
             worker: true, //enable worker thread for better performance
             delimiter: ',',
