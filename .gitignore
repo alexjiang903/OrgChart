@@ -33,4 +33,5 @@ coverage
 eslint*
 jsconfig.json
 .editorconfig*
+dump.md
 

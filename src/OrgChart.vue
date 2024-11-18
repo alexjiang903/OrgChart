@@ -1,6 +1,7 @@
 <template>
     <div>
-        <h1>Home Page of Application</h1>
+        <h1>Company Organization Chart</h1>
+        <p>go back to home page and come back if no data is displayed.</p>
         
     </div>
 </template>
@@ -37,9 +38,12 @@ export default {
     methods: {
         createOrgTree() {
             console.log("creating org tree")
-            const width = 1000; // Width of the SVG canvas
-            const height = 1500; // Height of the SVG canvas
-            const margin = { top: 50, right: 150, bottom: 50, left: 150 };
+            //A lot of the code below was chatgpt generated...
+            //Issue lies with the relationship not being displayed in a tree format (more like linked list)
+            
+            const width = 1500; // Width of the SVG canvas
+            const height = 1000; // Height of the SVG canvas
+            const margin = { top: 50, right: 200, bottom: 100, left: 200};
 
             const svg = d3
                 .select(this.$el) // Attach to the component's root DOM element
@@ -47,52 +51,45 @@ export default {
                 .attr("width", width)
                 .attr("height", height)
                 .append("g")
-                .attr(
-                    "transform",
-                    `translate(${margin.left}, ${margin.top})`
-                );
+                .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
+            const treeLayout = d3.tree().size([width, height]);
             const root = d3.hierarchy(this.orgTree);
-            
-            const treeLayout = d3.tree().size([
-                height - margin.top - margin.bottom,
-                width - margin.left - margin.right,
-            ]);
 
             treeLayout(root)
-
             
-            const link = svg //link between nodesd
+            const nodes = root.descendants();
+            const links = root.links(); 
+
+            svg
                 .selectAll(".link")
-                .data(root.links())
+                .data(links)
                 .enter()
                 .append("path")
                 .attr("class", "link")
-                .attr("d", d3.linkHorizontal()
-                    .x(d => d.y) // Horizontal position
-                    .y(d => d.x) // Vertical position
-                )
-                .style("fill", "none")
-                .style("stroke", "#ccc")
-                .style("stroke-width", 2);
-            
-            const node = svg //nodes for each employee
+                .attr("fill", "none")
+                .attr("stroke", "#ccc")
+                .attr("stroke-width", 2)
+                .attr("d",d3.linkHorizontal().x(d => d.y).y(d => d.x));
+
+            // Render the nodes
+            const node = svg
                 .selectAll(".node")
-                .data(root.descendants())
+                .data(nodes)
                 .enter()
                 .append("g")
                 .attr("class", "node")
                 .attr("transform", d => `translate(${d.y},${d.x})`);
+        
+            node.append("circle").attr("r", 5).style("fill", d => (d.children ? "#69b3a2" : "#1f77b4")); 
             
-            node.append("circle").attr("r", 5).style("fill", "#69b3a2"); //create a circle shape for the employee
-
+            // Add labels
             node
                 .append("text")
                 .attr("dy", 3)
-                .attr("x", d => (d.children ? -10 : 10)) // Adjust text position
+                .attr("x", d => (d.children ? -10 : 10)) // Adjust label position
                 .style("text-anchor", d => (d.children ? "end" : "start"))
-                .text(d => `${d.data.name} (${d.data.position || "Unknown"})`); // Combine name and position
-
+                .text(d => `${d.data.name} (${d.data.position})`); 
         },
     },
 };
