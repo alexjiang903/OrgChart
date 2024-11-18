@@ -25,7 +25,7 @@ export default {
     methods: {
         async loadCSV() {
             try {
-                const response = await fetch('/csv_data/testing_data.csv');
+                const response = await fetch('/csv_data/sample_real_data.csv');
                 const csvText = await response.text();
                 console.log(csvText)
                 this.parseCSV(csvText);

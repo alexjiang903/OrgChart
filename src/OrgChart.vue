@@ -1,8 +1,8 @@
 <template>
     <div>
         <h1>Company Organization Chart</h1>
-        <p>go back to home page and come back if no data is displayed.</p>
-        
+        <p>NOTE: go back to home page and come back if no data is displayed.</p>
+        <div id="tree-container" style="width: 100%; height: 100%;"></div>
     </div>
 </template>
 
@@ -22,76 +22,145 @@ export default {
         console.log(dataStore.nestedData)
         return {
             orgTree: dataStore.nestedData,
-            dummyData: ''
+            svgWidth: 0,
+            svgHeight: 0,
+            margin: { top: 50, right: 200, bottom: 100, left: 200}
         }
     },
 
     mounted() {
         if (this.orgTree) {
-            this.createOrgTree()
+            this.svgHeight = 800;
+            this.svgWidth = 1200;
+            this.createOrgTree();
+            window.addEventListener("resize", this.resize);
         }
         else {
             console.error("Error, no tree found!")
         }
     },
 
+    beforeUnmount() {
+        window.removeEventListener("resize", this.resize);
+    },
+
     methods: {
         createOrgTree() {
             console.log("creating org tree")
-            //A lot of the code below was chatgpt generated...
-            //Issue lies with the relationship not being displayed in a tree format (more like linked list)
-            
-            const width = 1500; // Width of the SVG canvas
-            const height = 1000; // Height of the SVG canvas
-            const margin = { top: 50, right: 200, bottom: 100, left: 200};
+
+            const margin = this.margin;
+            const innerWidth = this.svgWidth - margin.left - margin.right;
+            const innerHeight = this.svgHeight - margin.top - margin.bottom;
 
             const svg = d3
-                .select(this.$el) // Attach to the component's root DOM element
+                .select("#tree-container") 
                 .append("svg")
-                .attr("width", width)
-                .attr("height", height)
+                .attr("width", this.svgWidth)
+                .attr("height", this.svgHeight)
+                .attr("id", "chart-container")
+
+            // Add a zoomable group
+            const g = svg
                 .append("g")
+                .attr("id", "treeGroup")
                 .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-            const treeLayout = d3.tree().size([width, height]);
+            const zoom = d3
+                .zoom()
+                .scaleExtent([0.5, 2]) // Limit zoom levels
+                .on("zoom", (event) => {
+                    g.attr("transform", event.transform);
+                });
+
+            svg.call(zoom);
+
+            const treeLayout = d3.tree().size([innerHeight, innerWidth]);
             const root = d3.hierarchy(this.orgTree);
 
-            treeLayout(root)
-            
-            const nodes = root.descendants();
-            const links = root.links(); 
+            treeLayout(root);
 
-            svg
-                .selectAll(".link")
-                .data(links)
+            // Create links between nodes
+            g.selectAll(".link")
+                .data(root.links())
                 .enter()
                 .append("path")
                 .attr("class", "link")
                 .attr("fill", "none")
                 .attr("stroke", "#ccc")
                 .attr("stroke-width", 2)
-                .attr("d",d3.linkHorizontal().x(d => d.y).y(d => d.x));
+                .attr("d",d3.linkHorizontal().x((d) => d.y).y((d) => d.x));
 
-            // Render the nodes
-            const node = svg
+            // Create nodes
+            const nodes = g
                 .selectAll(".node")
-                .data(nodes)
+                .data(root.descendants())
                 .enter()
                 .append("g")
                 .attr("class", "node")
-                .attr("transform", d => `translate(${d.y},${d.x})`);
-        
-            node.append("circle").attr("r", 5).style("fill", d => (d.children ? "#69b3a2" : "#1f77b4")); 
-            
-            // Add labels
-            node
+                .attr("transform", (d) => `translate(${d.y}, ${d.x})`);
+
+            nodes
+                .append("circle")
+                .attr("r", 5)
+                .attr("fill", "steelblue");
+
+            nodes
                 .append("text")
-                .attr("dy", 3)
-                .attr("x", d => (d.children ? -10 : 10)) // Adjust label position
-                .style("text-anchor", d => (d.children ? "end" : "start"))
-                .text(d => `${d.data.name} (${d.data.position})`); 
+                .attr("dx", 10)
+                .attr("dy", 4)
+                .text((d) => d.data.Name +` (${d.data["Job Title"]})`)
+                .style("font-size", "12px");
+
+            // Calculate the center of the SVG canvas
+            const svgCenterX = this.svgWidth / 2;
+            const svgCenterY = this.svgHeight / 2;
+
+            // Calculate the tree's dimensions
+            const treeWidth = root.y; // Horizontal size of the tree
+            const treeHeight = root.x; // Vertical size of the tree
+
+            // Adjust the tree to be centered in the canvas
+            const initialTransform = d3.zoomIdentity
+                .translate(svgCenterX - treeWidth / 2, svgCenterY - treeHeight / 2)
+                .scale(1);
+
+            // Apply the initial transform
+            svg.call(zoom.transform, initialTransform);
+            g.attr("transform", initialTransform);
         },
+
+        resize() {
+            console.log("resize called!")
+            // Update dimensions based on the new window size
+            this.svgWidth = window.innerWidth;
+            this.svgHeight = window.innerHeight;
+
+            // Update SVG dimensions
+            d3.select("#orgTreeSVG").attr("width", this.svgWidth).attr("height", this.svgHeight);
+
+            // Reposition the tree group to keep it centered
+            this.treeGroup.attr("transform", `translate(${this.svgWidth / 2}, ${this.svgHeight / 2})`);
+        }
     },
 };
 
 </script>
+
+<style>
+#tree-container {
+  overflow: hidden;
+  position: relative;
+}
+.node circle {
+  fill: steelblue;
+}
+.node text {
+  font-size: 12px;
+  font-family: Arial, sans-serif;
+}
+.link {
+  fill: none;
+  stroke: #ccc;
+  stroke-width: 2px;
+}
+</style>
