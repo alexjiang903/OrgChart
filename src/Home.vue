@@ -7,9 +7,9 @@
     </div>
 </template>
 
-<script>
-
+<script lang="js">
 import Papa from 'papaparse';
+import { useDataStore } from '@/stores/globalDataStore.js'
 
 export default {
     name: 'Home', //Home page component of organization chart. 
@@ -39,6 +39,7 @@ export default {
         parseCSV(csvString) {
             //parse the csv data using papa parse
             console.log("log start")
+            const dataStore = useDataStore();
             Papa.parse(csvString, { 
                 header: true,
                 worker: true, //enable worker thread for better performance
@@ -52,9 +53,15 @@ export default {
 
                     const flatData = results.data;
                     const JSONTreeData = this.getNestedJSON(flatData); //stores the final nested JSON mapping out parent-child relationships
+                   
                     this.nestedJSON = JSONTreeData;
-                
                     console.log("finished processing all 30k employees")
+                    
+                    dataStore.setNestedData(this.nestedJSON);
+                    console.log("data stored in pinia global state")
+                    
+
+
                 },
 
                 error: function (err) {
