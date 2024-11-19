@@ -2,6 +2,7 @@
     <div style="background-color: powderblue;">
         <h1>AgentNoon Company Organization Chart</h1>
         <p><strong>Don't refresh this page directly, go back to home page (otherwise csv data won't be accessible in Pinia yet)</strong></p>
+        <h1>Total Organization Headcount: {{ this.headcount }}</h1>
         <div id="tree-container" style="width: 100%; height: 100%;">
             <div ref="infoCard" class="emp-info-card" style="display: none;">
                 <p><strong>Name: </strong> {{ userSelected.name }}</p>
@@ -11,9 +12,10 @@
                 <p><strong>Employee Level: </strong> {{ userSelected.level }}</p>
                 <p><strong>Job Family: </strong> {{ userSelected.jobFamily }}</p>
                 <p><strong>Agentnoon Entity: </strong>{{ userSelected.entity }}</p>
-                <p><strong>Management Cost: </strong> {{ userSelected.manage_cost }}</p>
-                <p><strong>IC Cost: </strong> {{ userSelected.ic_cost }}</p>
-                <p><strong>Total Cost: </strong> {{ userSelected.total_cost }}</p>
+                <p><strong>Number of Subordinates: </strong>{{ userSelected.descendants }}</p>
+                <p><strong>Management Cost: </strong> {{`$${userSelected.manage_cost }`}}</p>
+                <p><strong>IC Cost: </strong> {{`$${userSelected.ic_cost }` }}</p>
+                <p><strong>Total Cost: </strong> {{`$${userSelected.total_cost }` }}</p>
                 <p><strong>Management Cost Ratio: </strong> {{ userSelected.MCR }}</p>
             </div>
         </div>
@@ -60,17 +62,17 @@
 
 import * as d3 from "d3";
 import { useDataStore } from '@/stores/globalDataStore.js'
-
+import { countChildren, calcManageCost, calcICCost, calcTotalCost, calcMCR } from "@/utils/pathCalcs.js";
 export default {
     name: "OrgTree",
     data() {
         const dataStore = useDataStore();
         return {
-            orgTree: dataStore.nestedData,
+            orgTree: dataStore.nestedData, //raw json data stored in Pinia
             svgWidth: 0,
             svgHeight: 0,
             margin: { top: 50, right: 200, bottom: 100, left: 200},
-            root: null, //root of org tree
+            root: null, //root of org tree (d3 hierarchy object)
             g: null, //group 
             index: 0, //id for tracking node element (for node collapsing logic) 
             tree: null,
@@ -82,11 +84,14 @@ export default {
                 level: 0,
                 jobFamily: "",
                 entity: "",
+                descendants: "",
+                salary: 0,
                 ic_cost: 0,
                 manage_cost: 0,
                 MCR: 0,
                 total_cost: 0
-            }
+            },
+            headcount: 0, // employee count of ALL members of the organization (CEO included)
         }
     },
 
@@ -96,6 +101,8 @@ export default {
             this.svgWidth = 1000;
             this.createOrgTree();
             window.addEventListener("resize", this.resize);
+
+            this.setCalcVals(this.orgTree);
         }
         else {
             console.error("Error, no tree found!")
@@ -309,11 +316,14 @@ export default {
                 level: d.data.level,
                 jobFamily: d.data["Job Family"],
                 entity: d.data.Entity,
-                //Replace following params below with functions that calculates all needed values
-                manage_cost: 0,
-                ic_cost: 0,
-                total_cost: 0,
-                MCR: 0
+                salary: d.data.Salary, //not displayed but used in calculations for params below. 
+
+                //Following values are taken from the pre-calulated values when mounted.
+                manage_cost: this.formatWithCommas(d.data["Management Cost"]),
+                ic_cost: this.formatWithCommas(d.data["IC Cost"]),
+                total_cost: this.formatWithCommas(d.data["Total Cost"]),
+                MCR: d.data["MCR"],
+                descendants: this.formatWithCommas(d.data["Descendants"])
             };
 
             // Get the node's position in the SVG
@@ -330,14 +340,40 @@ export default {
 
             // Show the card
             infoCard.style.display = "block";
-
-
         },
 
         hideInfoCard() {
             //hides the info card once mouse leaves node
             const infoCard = this.$refs.infoCard;
             infoCard.style.display = "none";
+        },
+
+        setCalcVals(node) {
+            //method to assign manage cost, ic cost, # of descendants, total cost, and MCR to the node and all its children
+            const memo = new Map();
+            const manageCost = calcManageCost(node);
+            const ic_cost = calcICCost(node);
+            const children = countChildren(node, memo);
+            const total_cost = calcTotalCost(node);
+            const mcr = calcMCR(manageCost, ic_cost);
+
+            node["Management Cost"] = manageCost;
+            node["IC Cost"] = ic_cost;
+            node["Total Cost"] = total_cost;
+            node["MCR"] = Math.round(mcr * 100) / 100;
+            node["Descendants"] = children;
+            
+            if (node.children && node.children.length > 0) {
+                for (const child of node.children) {
+                    this.setCalcVals(child);
+                }
+            }
+            
+            this.headcount = 1 + children;
+        },
+
+        formatWithCommas(number) {
+            return new Intl.NumberFormat('en-US').format(number);
         }
 
 
