@@ -1,10 +1,57 @@
 <template>
     <div style="background-color: powderblue;">
-        <h1>Company Organization Chart</h1>
-        <p>NOTE: go back to home page and come back if no data is displayed.</p>
-        <div id="tree-container" style="width: 100%; height: 100%;"></div>
+        <h1>AgentNoon Company Organization Chart</h1>
+        <p><strong>Don't refresh this page directly, go back to home page (otherwise csv data won't be accessible in Pinia yet)</strong></p>
+        <div id="tree-container" style="width: 100%; height: 100%;">
+            <div ref="infoCard" class="emp-info-card" style="display: none;">
+                <p><strong>Name: </strong> {{ userSelected.name }}</p>
+                <p><strong>Job Title: </strong> {{ userSelected.jobTitle }}</p>
+                <p><strong>Email: </strong> {{ userSelected.email }}</p>
+                <p><strong>Location: </strong> {{ userSelected.location }}</p>
+                <p><strong>Employee Level: </strong> {{ userSelected.level }}</p>
+                <p><strong>Job Family: </strong> {{ userSelected.jobFamily }}</p>
+                <p><strong>Agentnoon Entity: </strong>{{ userSelected.entity }}</p>
+                <p><strong>Management Cost: </strong> {{ userSelected.manage_cost }}</p>
+                <p><strong>IC Cost: </strong> {{ userSelected.ic_cost }}</p>
+                <p><strong>Total Cost: </strong> {{ userSelected.total_cost }}</p>
+                <p><strong>Management Cost Ratio: </strong> {{ userSelected.MCR }}</p>
+            </div>
+        </div>
     </div>
 </template>
+
+
+
+<style>
+#tree-container {
+  overflow: hidden;
+  position: relative;
+}
+.node circle {
+  fill: steelblue;
+}
+.node text {
+  font-size: 12px;
+  font-family: Arial, sans-serif;
+}
+.link {
+  fill: none;
+  stroke: sandybrown;
+  stroke-width: 2px;
+}
+
+.emp-info-card {
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  font-size: 14px;
+  pointer-events: none; /* Prevent the card from blocking mouse events */
+  z-index: 1000; /* Ensure it appears above everything else */
+}
+</style>
 
 
 <script lang="js">
@@ -26,7 +73,20 @@ export default {
             root: null, //root of org tree
             g: null, //group 
             index: 0, //id for tracking node element (for node collapsing logic) 
-            tree: null
+            tree: null,
+            userSelected: { // employee info to be displayed (when mouse hovers over)
+                name: "",
+                jobTitle: "",
+                email: "",
+                location: "",
+                level: 0,
+                jobFamily: "",
+                entity: "",
+                ic_cost: 0,
+                manage_cost: 0,
+                MCR: 0,
+                total_cost: 0
+            }
         }
     },
 
@@ -111,7 +171,9 @@ export default {
                 .append("circle")
                 .attr("r", 5)
                 .attr("fill", (d) => d.children ? "steelblue": "#2d5475")
-                .on("click", (event, d) => this.onNodeClick(d));
+                .on("click", (event, d) => this.onNodeClick(d))
+                .on("mouseover", (event, d) => this.showInfoCard(event, d))
+                .on("mouseout", (event,d) => this.hideInfoCard());
 
             nodes
                 .append("text")
@@ -180,7 +242,9 @@ export default {
                 .append("g")
                 .attr("class", "node")
                 .attr("transform", () => `translate(${source.y0},${source.x0})`)
-                .on("click", (event, d) => this.onNodeClick(d));
+                .on("click", (event, d) => this.onNodeClick(d))
+                .on("mouseover", (event, d) => this.showInfoCard(event, d))
+                .on("mouseout", (event,d) => this.hideInfoCard());
 
             nodeEnter
                 .append("circle")
@@ -229,30 +293,57 @@ export default {
                 d.y0 = d.y;
             });
             
+        },
+
+        showInfoCard(event, d) {
+            //displays user info card with key parameters
+            // Get the info card element
+            const infoCard = this.$refs.infoCard;
+
+            // Populate the info card with data
+            this.userSelected = {
+                name: d.data.Name,
+                email: d.data.Email,
+                jobTitle: d.data["Job Title"],
+                location: d.data.Location,
+                level: d.data.level,
+                jobFamily: d.data["Job Family"],
+                entity: d.data.Entity,
+                //Replace following params below with functions that calculates all needed values
+                manage_cost: 0,
+                ic_cost: 0,
+                total_cost: 0,
+                MCR: 0
+            };
+
+            // Get the node's position in the SVG
+            const nodePosition = event.target.getBoundingClientRect();
+            const svgContainer = document.querySelector("#tree-container").getBoundingClientRect();
+
+            // Calculate the position relative to the node
+            const left = nodePosition.right - svgContainer.left + 10; // Align right of the node text
+            const top = nodePosition.top - svgContainer.top - 10; // Adjust slightly above the node center
+
+            // Apply the position to the card
+            infoCard.style.left = `${left}px`;
+            infoCard.style.top = `${top}px`;
+
+            // Show the card
+            infoCard.style.display = "block";
+
+
+        },
+
+        hideInfoCard() {
+            //hides the info card once mouse leaves node
+            const infoCard = this.$refs.infoCard;
+            infoCard.style.display = "none";
         }
+
+
     },
 };
 
 </script>
 
 
-
-
-<style>
-#tree-container {
-  overflow: hidden;
-  position: relative;
-}
-.node circle {
-  fill: steelblue;
-}
-.node text {
-  font-size: 12px;
-  font-family: Arial, sans-serif;
-}
-.link {
-  fill: none;
-  stroke: sandybrown;
-  stroke-width: 2px;
-}
-</style>
