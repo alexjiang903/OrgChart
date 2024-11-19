@@ -1,6 +1,6 @@
 
 <template>
-    <div>
+    <div style="background-color: skyblue;">
         <h1>Home Page of Application</h1>
         <pre>{{nestedJSON}}</pre>
 
@@ -27,7 +27,6 @@ export default {
             try {
                 const response = await fetch('/csv_data/sample_real_data.csv');
                 const csvText = await response.text();
-                console.log(csvText)
                 this.parseCSV(csvText);
                 
             }
@@ -38,17 +37,14 @@ export default {
 
         parseCSV(csvString) {
             //parse the csv data using papa parse
-            console.log("log start")
             const dataStore = useDataStore();
             Papa.parse(csvString, { 
                 header: true,
                 worker: true, //enable worker thread for better performance
                 delimiter: ',',
                 complete: (results) => {
-                    console.log("log results", results);
-
                     if (results.data.length === 0) {
-                        console.log("no data was parsed!") 
+                        console.error("no data was parsed!") 
                     }
 
                     const flatData = results.data;
@@ -98,7 +94,6 @@ export default {
                     }
                 }
             });
-            console.log(rootNode);
             return rootNode;
         }
     },

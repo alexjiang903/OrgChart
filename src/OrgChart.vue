@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div style="background-color: powderblue;">
         <h1>Company Organization Chart</h1>
         <p>NOTE: go back to home page and come back if no data is displayed.</p>
         <div id="tree-container" style="width: 100%; height: 100%;"></div>
@@ -18,20 +18,22 @@ export default {
     name: "OrgTree",
     data() {
         const dataStore = useDataStore();
-        console.log("reading from pinia store:")
-        console.log(dataStore.nestedData)
         return {
             orgTree: dataStore.nestedData,
             svgWidth: 0,
             svgHeight: 0,
-            margin: { top: 50, right: 200, bottom: 100, left: 200}
+            margin: { top: 50, right: 200, bottom: 100, left: 200},
+            root: null, //root of org tree
+            g: null, //group 
+            index: 0, //id for tracking node element (for node collapsing logic) 
+            tree: null
         }
     },
 
     mounted() {
         if (this.orgTree) {
             this.svgHeight = 800;
-            this.svgWidth = 1200;
+            this.svgWidth = 1000;
             this.createOrgTree();
             window.addEventListener("resize", this.resize);
         }
@@ -75,25 +77,31 @@ export default {
             svg.call(zoom);
 
             const treeLayout = d3.tree().size([innerHeight, innerWidth]);
-            const root = d3.hierarchy(this.orgTree);
+            const root_node = d3.hierarchy(this.orgTree);
 
-            treeLayout(root);
+            this.root = root_node;
+            this.root.x0 = this.svgHeight / 2;
+            this.root.y0 = 0;
+            this.g = g;
+            this.tree = treeLayout;
+
+            treeLayout(root_node);
 
             // Create links between nodes
             g.selectAll(".link")
-                .data(root.links())
+                .data(root_node.links())
                 .enter()
                 .append("path")
                 .attr("class", "link")
                 .attr("fill", "none")
                 .attr("stroke", "#ccc")
-                .attr("stroke-width", 2)
+                .attr("stroke-width", 3)
                 .attr("d",d3.linkHorizontal().x((d) => d.y).y((d) => d.x));
 
             // Create nodes
             const nodes = g
                 .selectAll(".node")
-                .data(root.descendants())
+                .data(root_node.descendants())
                 .enter()
                 .append("g")
                 .attr("class", "node")
@@ -102,7 +110,8 @@ export default {
             nodes
                 .append("circle")
                 .attr("r", 5)
-                .attr("fill", "steelblue");
+                .attr("fill", (d) => d.children ? "steelblue": "#2d5475")
+                .on("click", (event, d) => this.onNodeClick(d));
 
             nodes
                 .append("text")
@@ -116,8 +125,8 @@ export default {
             const svgCenterY = this.svgHeight / 2;
 
             // Calculate the tree's dimensions
-            const treeWidth = root.y; // Horizontal size of the tree
-            const treeHeight = root.x; // Vertical size of the tree
+            const treeWidth = root_node.y; // Horizontal size of the tree
+            const treeHeight = root_node.x; // Vertical size of the tree
 
             // Adjust the tree to be centered in the canvas
             const initialTransform = d3.zoomIdentity
@@ -136,15 +145,98 @@ export default {
             this.svgHeight = window.innerHeight;
 
             // Update SVG dimensions
-            d3.select("#orgTreeSVG").attr("width", this.svgWidth).attr("height", this.svgHeight);
+            d3.select("#chart-container").attr("width", this.svgWidth).attr("height", this.svgHeight);
+        },
 
-            // Reposition the tree group to keep it centered
-            this.treeGroup.attr("transform", `translate(${this.svgWidth / 2}, ${this.svgHeight / 2})`);
+        onNodeClick(d) {
+            //toggle visibility for a subtree, allowing for collapsing/expanding as needed
+            if (d.children) {
+                d.temp_children = d.children; // collapse node
+                d.children = null;
+            } 
+            else {
+                // Expand the node
+                d.children = d.temp_children;
+                d.temp_children = null;
+            }
+
+            this.updateTree(d); // Re-render the tree
+        },
+
+        updateTree(source) {
+            //logic to update tree to reflect changes
+          
+            this.tree(this.root);
+
+            const nodes = this.root.descendants();
+            const links = this.root.links();
+
+        
+            const node = this.g.selectAll(".node").data(nodes, d => d.id || (d.id = ++(this.index)));
+
+            // Enter new nodes at the parent's previous position
+            const nodeEnter = node
+                .enter()
+                .append("g")
+                .attr("class", "node")
+                .attr("transform", () => `translate(${source.y0},${source.x0})`)
+                .on("click", (event, d) => this.onNodeClick(d));
+
+            nodeEnter
+                .append("circle")
+                .attr("r", 5)
+                .attr("fill", (d) => (d._children ? "steelblue" : "#2d5475"));
+
+            nodeEnter
+                .append("text")
+                .attr("dy", 4)
+                .attr("x", (d) => (d._children ? -10 : 10))
+                .attr("text-anchor", (d) => (d._children ? "end" : "start"))
+                .text((d) => `${d.data.Name} (${d.data["Job Title"]})`);
+
+            // Update node positions
+            const nodeUpdate = node
+                .merge(nodeEnter)
+                .transition()
+                .duration(750)
+                .attr("transform", (d) => `translate(${d.y},${d.x})`);
+
+            // Remove exiting nodes
+            const nodeExit = node
+                .exit()
+                .transition()
+                .duration(750)
+                .attr("transform", () => `translate(${source.y},${source.x})`)
+                .remove();
+
+            // Update links
+            const link = this.g.selectAll(".link").data(links, (d) => d.target.id);
+
+            link
+                .enter()
+                .insert("path", "g")
+                .attr("class", "link")
+                .merge(link)
+                .transition()
+                .duration(750)
+                .attr("d",d3.linkHorizontal().x((d) => d.y).y((d) => d.x));
+
+            link.exit().remove();
+
+            // Store positions for transition
+            nodes.forEach((d) => {
+                d.x0 = d.x;
+                d.y0 = d.y;
+            });
+            
         }
     },
 };
 
 </script>
+
+
+
 
 <style>
 #tree-container {
@@ -160,7 +252,7 @@ export default {
 }
 .link {
   fill: none;
-  stroke: #ccc;
+  stroke: sandybrown;
   stroke-width: 2px;
 }
 </style>
