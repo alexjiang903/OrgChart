@@ -25,10 +25,10 @@ export default {
     methods: {
         async loadCSV() {
             try {
-                const response = await fetch('/csv_data/sample_real_data.csv');
+                const response = await fetch('/csv_data/larger_data_sample.csv');
                 const csvText = await response.text();
                 this.parseCSV(csvText);
-                
+
             }
             catch (error) {
                 console.error('Error loading CSV file:', error);
@@ -43,6 +43,7 @@ export default {
                 worker: true, //enable worker thread for better performance
                 delimiter: ',',
                 complete: (results) => {
+                    console.log(results);
                     if (results.data.length === 0) {
                         console.error("no data was parsed!") 
                     }
@@ -51,6 +52,7 @@ export default {
                     const JSONTreeData = this.getNestedJSON(flatData); //stores the final nested JSON mapping out parent-child relationships
                    
                     this.nestedJSON = JSONTreeData;
+                    console.log(this.nestedJSON);
                     console.log("finished processing all 30k employees")
                     
                     dataStore.setNestedData(this.nestedJSON);
@@ -73,10 +75,6 @@ export default {
                 LUT[element["Employee Id"]] = {
                     ...element,
                     children: [], //all subordinates that report to person with the employee ID
-                    manage_cost: 0, //management costs
-                    ic_cost: 0,
-                    total_cost: 0,
-                    MCR: 0, //management cost ratio
                 };
             });
 

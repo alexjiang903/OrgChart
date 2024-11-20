@@ -6,27 +6,38 @@
         <h2 class="text-lg font-semibold text-blue-800 mb-4">Total Organization Headcount:
             <span class="font-bold text-gray-900">{{ this.headcount }}</span>
         </h2>
-    
-        <div id="tree-container" style="width: 100%; height: 100%;">
-            <div ref="infoCard"
-                class="emp-info-card bg-white shadow-lg rounded-lg p-6 border border-gray-200 text-left text-sm"
-                style="display: none; position: absolute; z-index:50;">
-                <p class="font-bold text-lg mb-2">Name: <span class="font-normal">{{ userSelected.name }}</span></p>
-                <p><strong>Job Title: </strong> {{ userSelected.jobTitle }}</p>
-                <p><strong>Email: </strong> {{ userSelected.email }}</p>
-                <p><strong>Location: </strong> {{ userSelected.location }}</p>
-                <p><strong>Employee Level: </strong> {{ userSelected.level }}</p>
-                <p><strong>Job Family: </strong> {{ userSelected.jobFamily }}</p>
-                <p><strong>Agentnoon Entity: </strong>{{ userSelected.entity }}</p>
-                <p><strong>Number of Subordinates: </strong>{{ userSelected.descendants }}</p>
-                <p><strong>Management Cost: </strong> {{ `$${userSelected.manage_cost}` }}</p>
-                <p><strong>IC Cost: </strong> {{ `$${userSelected.ic_cost}` }}</p>
-                <p><strong>Total Cost: </strong> {{ `$${userSelected.total_cost}` }}</p>
-                <p><strong>Management Cost Ratio: </strong> {{ userSelected.MCR }}</p>
-            </div>
+
+        <div class="svg-container">
+            <svg width="700" height="1000">
+                <foreignObject x="0" y="0" width="100%" height="100%">
+                    <div xmlns="http://www.w3.org/1999/xhtml">
+                        <div id="tree-container" style="width: 100%; height: 100%;">
+                            <div ref="infoCard"
+                                class="emp-info-card bg-white shadow-lg rounded-lg p-6 border border-gray-200 text-left text-sm"
+                                style="display: none; position: absolute; z-index:50;">
+                                <p class="font-bold text-lg mb-2">Name: <span class="font-bold">{{ userSelected.name
+                                 }}</span></p>
+                                <p><strong>Job Title: </strong> {{ userSelected.jobTitle }}</p>
+                                <p><strong>Email: </strong> {{ userSelected.email }}</p>
+                                <p><strong>Location: </strong> {{ userSelected.location }}</p>
+                                <p><strong>Employee Level: </strong> {{ userSelected.level }}</p>
+                                <p><strong>Job Family: </strong> {{ userSelected.jobFamily }}</p>
+                                <p><strong>Agentnoon Entity: </strong>{{ userSelected.entity }}</p>
+                                <p><strong>Number of Subordinates: </strong>{{ userSelected.descendants }}</p>
+                                <p><strong>Salary: </strong>{{ userSelected.salary }}</p>
+                                <p><strong>Management Cost: </strong> {{ `$${userSelected.manage_cost}` }}</p>
+                                <p><strong>IC Cost: </strong> {{ `$${userSelected.ic_cost}` }}</p>
+                                <p><strong>Total Cost: </strong> {{ `$${userSelected.total_cost}` }}</p>
+                                <p><strong>Management Cost Ratio: </strong> {{ userSelected.MCR }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+            </svg>
         </div>
     </div>
 </template>
+
 
 
 
@@ -53,6 +64,7 @@
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     padding: 16px;
     border-radius: 8px;
+    pointer-events: none;
     border: 1px solid #e0e0e0;
     font-size: 14px;
     color: #333;
@@ -69,6 +81,23 @@
 .emp-info-card p strong {
     font-weight: 600;
 }
+
+text {
+    padding: 5px;
+    
+}
+
+svg {
+    overflow: visible;
+}
+
+.svg-container {
+    width: 700px; 
+    height: 1000px; 
+    overflow: hidden;
+    position: relative;
+}
+
 </style>
 
 
@@ -113,24 +142,35 @@ export default {
 
     mounted() {
         if (this.orgTree) {
-            this.svgHeight = 800;
-            this.svgWidth = 1000;
+            this.svgHeight = 1000;
+            this.svgWidth = 700;
         
             this.root = d3.hierarchy(this.orgTree);
             this.root.x0 = this.svgHeight / 2;
             this.root.y0 = 0;
 
             this.collapseAll(this.root);
-
-            this.root.children = this.root.temp_children;
-            this.root.temp_children = null;
-
             this.createOrgTree();
             this.updateTree(this.root);
 
             window.addEventListener("resize", this.resize);
 
             this.setCalcVals(this.orgTree);
+        
+            const borderWidth = 5; // Add a border around the tree area
+
+            const svg = d3.select("svg"); // Select the main SVG element
+
+            // Draw the outer border rectangle
+            svg.append("rect")
+                .attr("x", borderWidth / 2)
+                .attr("y", borderWidth / 2)
+                .attr("width", this.svgWidth)
+                .attr("height", this.svgHeight)
+                .attr("fill", "none")
+                .attr("stroke", "steelblue")
+                .attr("stroke-width", borderWidth);
+
         }
         else {
             console.error("Error, no tree found!")
@@ -149,6 +189,8 @@ export default {
             const innerWidth = this.svgWidth - margin.left - margin.right;
             const innerHeight = this.svgHeight - margin.top - margin.bottom;
 
+            d3.select("#chart-container").remove(); //if existing svg, remove it
+
             const svg = d3
                 .select("#tree-container") 
                 .append("svg")
@@ -164,14 +206,14 @@ export default {
 
             const zoom = d3
                 .zoom()
-                .scaleExtent([0.5, 2]) // Limit zoom levels
+                .scaleExtent([0.2, 2.3]) // Limit zoom levels
                 .on("zoom", (event) => {
                     g.attr("transform", event.transform);
                 });
 
             svg.call(zoom);
 
-            const treeLayout = d3.tree().size([innerHeight, innerWidth]);
+            const treeLayout = d3.tree().size([innerHeight, innerWidth * 2]).nodeSize([70, 500]);
             const root_node = d3.hierarchy(this.orgTree);
 
             this.root = root_node;
@@ -208,14 +250,15 @@ export default {
                 .attr("fill", (d) => d.children ? "steelblue": "#2d5475")
                 .on("click", (event, d) => this.onNodeClick(d))
                 .on("mouseover", (event, d) => this.showInfoCard(event, d))
-                .on("mouseout", (event,d) => this.hideInfoCard());
+                .on("mouseout", () => this.hideInfoCard());
 
             nodes
                 .append("text")
                 .attr("dx", 10)
                 .attr("dy", 4)
-                .text((d) => d.data.Name +` (${d.data["Job Title"]})`)
-                .style("font-size", "12px");
+                .text((d) => d.data.Name)
+                .style("font-size", "12px")
+                .style("font-family", "Arial, sans-serif")
 
             // Calculate the center of the SVG canvas
             const svgCenterX = this.svgWidth / 2;
@@ -270,14 +313,11 @@ export default {
         updateTree(source) {
             //logic to update tree to reflect changes in node visibility
             const treeData = this.tree(this.root);
-
             const nodes = treeData.descendants();
-
+            const links = treeData.links();
             nodes.forEach((d) => {
                 d.y = d.depth * 180;
             });
-
-            const links = treeData.links();
 
             const node = this.g.selectAll(".node").data(nodes, d => d.id || (d.id = ++(this.index)));
 
@@ -298,19 +338,20 @@ export default {
 
             nodeEnter
                 .append("text")
-                .attr("dy", 4)
+                .attr("dy", ".35em")
                 .attr("x", 10)
                 .attr("text-anchor", "start")
-                .text((d) => `${d.data.Name} (${d.data["Job Title"]})`);
+                .text((d) => `${d.data.Name}`);
 
             // Update node positions
-            node
-                .merge(nodeEnter)
+            const nodeUpdate = nodeEnter.merge(node);
+
+            nodeUpdate
                 .transition()
                 .duration(750)
                 .attr("transform", (d) => `translate(${d.y},${d.x})`);
 
-            // Remove exiting nodes
+            // Remove existing nodes
             node
                 .exit()
                 .transition()
@@ -424,43 +465,10 @@ export default {
         collapseAll(node) {
             if (node.children) {
                 node.temp_children = node.children; // Move children to `temp_children`
-                node.children = null; // Hide the children
                 node.temp_children.forEach((child) => this.collapseAll(child)); // Recursively collapse all children
+                node.children = null; // Collapse the node
             }
         },
-
-        centerTree() {
-            const svg = d3.select("#chart-container"); // Select the SVG container
-            const g = d3.select("#tree-container > svg > g"); // Select the tree group
-
-            const bounds = g.node().getBBox(); // Get bounding box of the tree
-            const fullWidth = this.svgWidth;
-            const fullHeight = this.svgHeight;
-
-            // Calculate scale to fit the tree within the viewbox
-            const scale = Math.min(fullWidth / bounds.width, fullHeight / bounds.height, 1); // Limit scale to 1x
-            const xTranslate = (fullWidth - bounds.width * scale) / 2 - bounds.x * scale;
-            const yTranslate = (fullHeight - bounds.height * scale) / 2 - bounds.y * scale;
-            
-            const leftOffset = 200;
-            xTranslate -= leftOffset;
-
-            // Apply initial zoom transform
-            const zoom = d3.zoom()
-                .scaleExtent([0.5, 2]) // Set zoom limits
-                .on("zoom", (event) => {
-                    g.attr("transform", event.transform);
-                });
-
-            svg.call(zoom); // Attach zoom behavior to the SVG
-
-            // Programmatically set initial zoom and translation
-            const initialTransform = d3.zoomIdentity.translate(xTranslate, yTranslate).scale(scale);
-            svg.call(zoom.transform, initialTransform); // Apply the transformation
-            g.attr("transform", initialTransform);
-        }
-
-
     },
 };
 
