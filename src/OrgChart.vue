@@ -4,19 +4,21 @@
         <p><strong>Don't refresh this page directly, go back to home page (otherwise csv data won't be accessible in Pinia yet)</strong></p>
         <h1>Total Organization Headcount: {{ this.headcount }}</h1>
         <div id="tree-container" style="width: 100%; height: 100%;">
-            <div ref="infoCard" class="emp-info-card" style="display: none;">
-                <p><strong>Name: </strong> {{ userSelected.name }}</p>
-                <p><strong>Job Title: </strong> {{ userSelected.jobTitle }}</p>
-                <p><strong>Email: </strong> {{ userSelected.email }}</p>
-                <p><strong>Location: </strong> {{ userSelected.location }}</p>
-                <p><strong>Employee Level: </strong> {{ userSelected.level }}</p>
-                <p><strong>Job Family: </strong> {{ userSelected.jobFamily }}</p>
-                <p><strong>Agentnoon Entity: </strong>{{ userSelected.entity }}</p>
-                <p><strong>Number of Subordinates: </strong>{{ userSelected.descendants }}</p>
-                <p><strong>Management Cost: </strong> {{`$${userSelected.manage_cost }`}}</p>
-                <p><strong>IC Cost: </strong> {{`$${userSelected.ic_cost }` }}</p>
-                <p><strong>Total Cost: </strong> {{`$${userSelected.total_cost }` }}</p>
-                <p><strong>Management Cost Ratio: </strong> {{ userSelected.MCR }}</p>
+            <div ref="infoCard"
+                class="absolute bg-white shadow-lg rounded-lg border border-gray-200 p-4 max-w-sm text-sm hover:shadow-xl transition-shadow"
+                style="display: none;">
+                <h3 class="text-lg font-bold text-gray-900 mb-2">{{ userSelected.name }}</h3>
+                <p class="text-gray-700 mb-1"><strong>Job Title:</strong> {{ userSelected.jobTitle }}</p>
+                <p class="text-gray-700 mb-1"><strong>Email:</strong> {{ userSelected.email }}</p>
+                <p class="text-gray-700 mb-1"><strong>Location:</strong> {{ userSelected.location }}</p>
+                <p class="text-gray-700 mb-1"><strong>Employee Level:</strong> {{ userSelected.level }}</p>
+                <p class="text-gray-700 mb-1"><strong>Job Family:</strong> {{ userSelected.jobFamily }}</p>
+                <p class="text-gray-700 mb-1"><strong>Entity:</strong> {{ userSelected.entity }}</p>
+                <p class="text-gray-700 mb-1"><strong>Number of Subordinates:</strong> {{ userSelected.descendants }}</p>
+                <p class="text-gray-700 mb-1"><strong>Management Cost:</strong> {{ `$${userSelected.manage_cost}`}}</p>
+                <p class="text-gray-700 mb-1"><strong>IC Cost:</strong> {{ `$${userSelected.ic_cost}` }}</p>
+                <p class="text-gray-700 mb-1"><strong>Total Cost:</strong> {{ `$${userSelected.total_cost}` }}</p>
+                <p class="text-gray-700"><strong>Management Cost Ratio:</strong> {{ userSelected.MCR }}</p>
             </div>
         </div>
     </div>
