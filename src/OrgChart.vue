@@ -1,14 +1,29 @@
 <template>
     <div style="background-color: powderblue;" class="container mx-auto px-4 py-8 text-center">
-        <h1 class="text-3xl font-bold text-blue-600 mb-4">AgentNoon Company Organization Chart</h1>
-        <p class="text-sm text-gray-600 mb-6"> Don't refresh this page directly, go back to the home page
-            (otherwise CSV data won't be accessible in Pinia yet).</p>
+        <h1 class="text-3xl font-bold text-blue-600 mb-4">Agentnoon Company Organization Chart</h1>
+        <p class="text-sm text-gray-600 mb-6"> Sidenote: Don't refresh this page directly, toggle back/forth between home page
+            (otherwise CSV data won't be accessible).</p>
         <h2 class="text-lg font-semibold text-blue-800 mb-4">Total Organization Headcount:
             <span class="font-bold text-gray-900">{{ this.headcount }}</span>
         </h2>
 
+        <div class="legend flex justify-center items-center mb-4">
+            <div class="flex items-center mr-4">
+                <svg width="20" height="20">
+                    <circle cx="10" cy="10" r="5" fill="steelblue"></circle>
+                </svg>
+                <span class="ml-2">Expandable Nodes (more than 1 person under)</span>
+            </div>
+            <div class="flex items-center">
+                <svg width="20" height="20">
+                    <circle cx="10" cy="10" r="5" fill="crimson"></circle>
+                </svg>
+                <span class="ml-2">Leaf Nodes (employees)</span>
+            </div>
+        </div>
+
         <div class="svg-container">
-            <svg width="700" height="1000">
+            <svg width="1100" height="1000">
                 <foreignObject x="0" y="0" width="100%" height="100%">
                     <div xmlns="http://www.w3.org/1999/xhtml">
                         <div id="tree-container" style="width: 100%; height: 100%;">
@@ -46,9 +61,7 @@
   overflow: hidden;
   position: relative;
 }
-.node circle {
-  fill: steelblue;
-}
+
 .node text {
   font-size: 12px;
   font-family: Arial, sans-serif;
@@ -92,10 +105,18 @@ svg {
 }
 
 .svg-container {
-    width: 700px; 
+    width: 1100px; 
     height: 1000px; 
     overflow: hidden;
     position: relative;
+    text-align: center;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Centers everything horizontally */
+    text-align: center; /* Ensures text stays centered */
 }
 
 </style>
@@ -143,7 +164,7 @@ export default {
     mounted() {
         if (this.orgTree) {
             this.svgHeight = 1000;
-            this.svgWidth = 700;
+            this.svgWidth = 1100;
         
             this.root = d3.hierarchy(this.orgTree);
             this.root.x0 = this.svgHeight / 2;
@@ -163,8 +184,8 @@ export default {
 
             // Draw the outer border rectangle
             svg.append("rect")
-                .attr("x", borderWidth / 2)
-                .attr("y", borderWidth / 2)
+                .attr("x", 0)
+                .attr("y", 0)
                 .attr("width", this.svgWidth)
                 .attr("height", this.svgHeight)
                 .attr("fill", "none")
@@ -189,7 +210,6 @@ export default {
             const innerWidth = this.svgWidth - margin.left - margin.right;
             const innerHeight = this.svgHeight - margin.top - margin.bottom;
 
-            d3.select("#chart-container").remove(); //if existing svg, remove it
 
             const svg = d3
                 .select("#tree-container") 
@@ -247,7 +267,7 @@ export default {
             nodes
                 .append("circle")
                 .attr("r", 5)
-                .attr("fill", (d) => d.children ? "steelblue": "#2d5475")
+                .attr("fill", (d) => (d.children || d.temp_children ? "steelblue" : "crimson"))
                 .on("click", (event, d) => this.onNodeClick(d))
                 .on("mouseover", (event, d) => this.showInfoCard(event, d))
                 .on("mouseout", () => this.hideInfoCard());
@@ -334,7 +354,7 @@ export default {
             nodeEnter
                 .append("circle")
                 .attr("r", 5)
-                .attr("fill", (d) => (d.temp_children ? "steelblue" : "#2d5475"));
+                .attr("fill", (d) => (d.children || d._children ? "steelblue" : "crimson"));
 
             nodeEnter
                 .append("text")

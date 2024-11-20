@@ -24,8 +24,15 @@ const currentView = computed(() => {
 
 <template>
   <div class="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-    <a href="#/" style="background-color: aquamarine;">Home </a> |
-    <a href="#/orgchart" style="background-color: aquamarine;">View Org Chart</a>
+    <a href="#/" class="inline-link" style="background-color: aquamarine;">Home </a>
+    <a href="#/orgchart" class="inline-link" style="background-color: aquamarine;">View Org Chart</a>
     <component :is="currentView" />
   </div>
 </template>
+
+<style>
+.inline-link {
+  display: inline-block;
+  margin-right: 10px;
+}
+</style>
