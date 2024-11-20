@@ -176,9 +176,19 @@ th, td {
 </style>
 ```
 
-
-
-
+```js
+//Format for d3 hierarchy. 
+{
+  data: { /* Original data object */ }, // Your raw data object (e.g., Employee information)
+  depth: Number, // Depth of the node in the tree (0 for root)
+  height: Number, // Height of the subtree rooted at this node
+  parent: Node, // Reference to the parent node (null for root)
+  children: Array, // Array of child nodes (if expanded)
+  temp_children: Array, // Custom property you add to store collapsed children
+  x: Number, // x-coordinate (calculated by D3 layout)
+  y: Number  // y-coordinate (calculated by D3 layout)
+}
+```
 
 
 

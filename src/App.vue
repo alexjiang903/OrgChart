@@ -23,7 +23,9 @@ const currentView = computed(() => {
 </script>
 
 <template>
-  <a href="#/" style="background-color: aquamarine;">Home </a> |
-  <a href="#/orgchart" style="background-color: aquamarine;">View Org Chart</a>
-  <component :is="currentView" />
+  <div class="min-h-screen flex flex-col items-center justify-center bg-gray-50">
+    <a href="#/" style="background-color: aquamarine;">Home </a> |
+    <a href="#/orgchart" style="background-color: aquamarine;">View Org Chart</a>
+    <component :is="currentView" />
+  </div>
 </template>

@@ -1,11 +1,17 @@
 <template>
-    <div style="background-color: powderblue;">
-        <h1>AgentNoon Company Organization Chart</h1>
-        <p><strong>Don't refresh this page directly, go back to home page (otherwise csv data won't be accessible in Pinia yet)</strong></p>
-        <h1>Total Organization Headcount: {{ this.headcount }}</h1>
+    <div style="background-color: powderblue;" class="container mx-auto px-4 py-8 text-center">
+        <h1 class="text-3xl font-bold text-blue-600 mb-4">AgentNoon Company Organization Chart</h1>
+        <p class="text-sm text-gray-600 mb-6"> Don't refresh this page directly, go back to the home page
+            (otherwise CSV data won't be accessible in Pinia yet).</p>
+        <h2 class="text-lg font-semibold text-blue-800 mb-4">Total Organization Headcount:
+            <span class="font-bold text-gray-900">{{ this.headcount }}</span>
+        </h2>
+    
         <div id="tree-container" style="width: 100%; height: 100%;">
-            <div ref="infoCard" class="emp-info-card" style="display: none;">
-                <p><strong>Name: </strong> {{ userSelected.name }}</p>
+            <div ref="infoCard"
+                class="emp-info-card bg-white shadow-lg rounded-lg p-6 border border-gray-200 text-left text-sm"
+                style="display: none; position: absolute; z-index:50;">
+                <p class="font-bold text-lg mb-2">Name: <span class="font-normal">{{ userSelected.name }}</span></p>
                 <p><strong>Job Title: </strong> {{ userSelected.jobTitle }}</p>
                 <p><strong>Email: </strong> {{ userSelected.email }}</p>
                 <p><strong>Location: </strong> {{ userSelected.location }}</p>
@@ -13,9 +19,9 @@
                 <p><strong>Job Family: </strong> {{ userSelected.jobFamily }}</p>
                 <p><strong>Agentnoon Entity: </strong>{{ userSelected.entity }}</p>
                 <p><strong>Number of Subordinates: </strong>{{ userSelected.descendants }}</p>
-                <p><strong>Management Cost: </strong> {{`$${userSelected.manage_cost }`}}</p>
-                <p><strong>IC Cost: </strong> {{`$${userSelected.ic_cost }` }}</p>
-                <p><strong>Total Cost: </strong> {{`$${userSelected.total_cost }` }}</p>
+                <p><strong>Management Cost: </strong> {{ `$${userSelected.manage_cost}` }}</p>
+                <p><strong>IC Cost: </strong> {{ `$${userSelected.ic_cost}` }}</p>
+                <p><strong>Total Cost: </strong> {{ `$${userSelected.total_cost}` }}</p>
                 <p><strong>Management Cost Ratio: </strong> {{ userSelected.MCR }}</p>
             </div>
         </div>
@@ -43,15 +49,25 @@
 }
 
 .emp-info-card {
-  position: absolute;
-  background-color: white;
-  border: 1px solid #ccc;
-  padding: 10px;
-  border-radius: 5px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-  font-size: 14px;
-  pointer-events: none; /* Prevent the card from blocking mouse events */
-  z-index: 1000; /* Ensure it appears above everything else */
+    background-color: #f9f9f9;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    font-size: 14px;
+    color: #333;
+}
+
+.emp-info-card p {
+    margin-bottom: 8px;
+}
+
+.emp-info-card p span {
+    font-weight: normal;
+}
+
+.emp-info-card p strong {
+    font-weight: 600;
 }
 </style>
 
@@ -75,7 +91,7 @@ export default {
             root: null, //root of org tree (d3 hierarchy object)
             g: null, //group 
             index: 0, //id for tracking node element (for node collapsing logic) 
-            tree: null,
+            tree: null, //tree layout (dimensions)
             userSelected: { // employee info to be displayed (when mouse hovers over)
                 name: "",
                 jobTitle: "",
@@ -99,7 +115,19 @@ export default {
         if (this.orgTree) {
             this.svgHeight = 800;
             this.svgWidth = 1000;
+        
+            this.root = d3.hierarchy(this.orgTree);
+            this.root.x0 = this.svgHeight / 2;
+            this.root.y0 = 0;
+
+            this.collapseAll(this.root);
+
+            this.root.children = this.root.temp_children;
+            this.root.temp_children = null;
+
             this.createOrgTree();
+            this.updateTree(this.root);
+
             window.addEventListener("resize", this.resize);
 
             this.setCalcVals(this.orgTree);
@@ -219,6 +247,7 @@ export default {
 
         onNodeClick(d) {
             //toggle visibility for a subtree, allowing for collapsing/expanding as needed
+            console.log("node before:", d);
             if (d.children) {
                 d.temp_children = d.children; // collapse node
                 d.children = null;
@@ -229,18 +258,27 @@ export default {
                 d.temp_children = null;
             }
 
+            d.descendants().forEach((descendant) => {
+                descendant.x0 = descendant.x;
+                descendant.y0 = descendant.y;
+            });
+
+            console.log("node after:", d);
             this.updateTree(d); // Re-render the tree
         },
 
         updateTree(source) {
-            //logic to update tree to reflect changes
-          
-            this.tree(this.root);
+            //logic to update tree to reflect changes in node visibility
+            const treeData = this.tree(this.root);
 
-            const nodes = this.root.descendants();
-            const links = this.root.links();
+            const nodes = treeData.descendants();
 
-        
+            nodes.forEach((d) => {
+                d.y = d.depth * 180;
+            });
+
+            const links = treeData.links();
+
             const node = this.g.selectAll(".node").data(nodes, d => d.id || (d.id = ++(this.index)));
 
             // Enter new nodes at the parent's previous position
@@ -251,29 +289,29 @@ export default {
                 .attr("transform", () => `translate(${source.y0},${source.x0})`)
                 .on("click", (event, d) => this.onNodeClick(d))
                 .on("mouseover", (event, d) => this.showInfoCard(event, d))
-                .on("mouseout", (event,d) => this.hideInfoCard());
+                .on("mouseout", () => this.hideInfoCard());
 
             nodeEnter
                 .append("circle")
                 .attr("r", 5)
-                .attr("fill", (d) => (d._children ? "steelblue" : "#2d5475"));
+                .attr("fill", (d) => (d.temp_children ? "steelblue" : "#2d5475"));
 
             nodeEnter
                 .append("text")
                 .attr("dy", 4)
-                .attr("x", (d) => (d._children ? -10 : 10))
-                .attr("text-anchor", (d) => (d._children ? "end" : "start"))
+                .attr("x", 10)
+                .attr("text-anchor", "start")
                 .text((d) => `${d.data.Name} (${d.data["Job Title"]})`);
 
             // Update node positions
-            const nodeUpdate = node
+            node
                 .merge(nodeEnter)
                 .transition()
                 .duration(750)
                 .attr("transform", (d) => `translate(${d.y},${d.x})`);
 
             // Remove exiting nodes
-            const nodeExit = node
+            node
                 .exit()
                 .transition()
                 .duration(750)
@@ -287,10 +325,17 @@ export default {
                 .enter()
                 .insert("path", "g")
                 .attr("class", "link")
+                .attr("d", () => {
+                    const o = { x: source.x0 || 0, y: source.y0 || 0 };
+                    return d3.linkHorizontal()
+                        .x(o.y)
+                        .y(o.x)(o, o);
+                })
                 .merge(link)
                 .transition()
                 .duration(750)
-                .attr("d",d3.linkHorizontal().x((d) => d.y).y((d) => d.x));
+                .attr("d", d3.linkHorizontal().x((d) => d.y).y((d) => d.x));
+    
 
             link.exit().remove();
 
@@ -374,6 +419,45 @@ export default {
 
         formatWithCommas(number) {
             return new Intl.NumberFormat('en-US').format(number);
+        },
+
+        collapseAll(node) {
+            if (node.children) {
+                node.temp_children = node.children; // Move children to `temp_children`
+                node.children = null; // Hide the children
+                node.temp_children.forEach((child) => this.collapseAll(child)); // Recursively collapse all children
+            }
+        },
+
+        centerTree() {
+            const svg = d3.select("#chart-container"); // Select the SVG container
+            const g = d3.select("#tree-container > svg > g"); // Select the tree group
+
+            const bounds = g.node().getBBox(); // Get bounding box of the tree
+            const fullWidth = this.svgWidth;
+            const fullHeight = this.svgHeight;
+
+            // Calculate scale to fit the tree within the viewbox
+            const scale = Math.min(fullWidth / bounds.width, fullHeight / bounds.height, 1); // Limit scale to 1x
+            const xTranslate = (fullWidth - bounds.width * scale) / 2 - bounds.x * scale;
+            const yTranslate = (fullHeight - bounds.height * scale) / 2 - bounds.y * scale;
+            
+            const leftOffset = 200;
+            xTranslate -= leftOffset;
+
+            // Apply initial zoom transform
+            const zoom = d3.zoom()
+                .scaleExtent([0.5, 2]) // Set zoom limits
+                .on("zoom", (event) => {
+                    g.attr("transform", event.transform);
+                });
+
+            svg.call(zoom); // Attach zoom behavior to the SVG
+
+            // Programmatically set initial zoom and translation
+            const initialTransform = d3.zoomIdentity.translate(xTranslate, yTranslate).scale(scale);
+            svg.call(zoom.transform, initialTransform); // Apply the transformation
+            g.attr("transform", initialTransform);
         }
 
 
