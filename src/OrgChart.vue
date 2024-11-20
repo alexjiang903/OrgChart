@@ -221,6 +221,7 @@ export default {
 
         onNodeClick(d) {
             //toggle visibility for a subtree, allowing for collapsing/expanding as needed
+            console.log("before click:", d);
             if (d.children) {
                 d.temp_children = d.children; // collapse node
                 d.children = null;
@@ -230,8 +231,9 @@ export default {
                 d.children = d.temp_children;
                 d.temp_children = null;
             }
-
+            console.log("after click", d);
             this.updateTree(d); // Re-render the tree
+            
         },
 
         updateTree(source) {

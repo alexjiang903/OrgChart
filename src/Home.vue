@@ -73,10 +73,6 @@ export default {
                 LUT[element["Employee Id"]] = {
                     ...element,
                     children: [], //all subordinates that report to person with the employee ID
-                    manage_cost: 0, //management costs
-                    ic_cost: 0,
-                    total_cost: 0,
-                    MCR: 0, //management cost ratio
                 };
             });
 
