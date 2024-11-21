@@ -1,68 +1,84 @@
 <template>
     <div class="flex flex-col items-center justify-start min-h-screen bg-blue-100 p-6">
-         <nav class="w-full flex justify-between items-center text-blue-900 py-3 px-6 mb-6 shadow-md">
+        <nav class="w-full flex justify-between items-center text-blue-900 py-3 px-6 mb-6 shadow-md">
             <a href="#/" class="font-semibold hover:underline">Home</a>
             <a href="#/orgchart" class="font-semibold hover:underline">View Org Chart</a>
         </nav>
 
         <h1 class="text-4xl font-bold text-blue-500 mb-4">Quick Find</h1>
-        <p class="text-lg text-gray-600 mb-6">This is the home page of the application. You can search for a user by name to view their details.</p>
+        <p class="text-lg text-gray-600 mb-6">This is the home page of the application. You can search for a user by
+            name to view their details.</p>
         <div class="flex items-center gap-4 mb-6">
-            <input
-                v-model="searchQuery"
-                type="text"
-                placeholder="Enter name to search"
-                class="w-64 p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400"
-            />
-            <button
-                @click="searchUser"
-                class="px-6 py-3 text-white bg-blue-500 rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
-            >
+            <input v-model="searchQuery" type="text" placeholder="Enter name to search"
+                class="w-64 p-3 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400" />
+            <button @click="searchUser"
+                class="px-6 py-3 text-white bg-blue-500 rounded-md shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400">
                 Search
             </button>
         </div>
 
         <div v-if="!userCardVisible" class="text-gray-600 text-lg mb-6">Search for a user to view their details</div>
-        <div
-            v-if="userCardVisible"
-            class="bg-white w-80 p-6 rounded-lg shadow-lg border border-gray-200 text-left"
-        >
-            <p class="mb-2">
-                <strong class="text-gray-700">Name: </strong>
-                <span class="text-gray-800">{{ this.userSelected.Name }}</span>
-            </p>
-            <p class="mb-2">
-                <strong class="text-gray-700">Job Title: </strong>
-                <span class="text-gray-800">{{ this.userSelected["Job Title"] }}</span>
-            </p>
-            <p class="mb-2">
-                <strong class="text-gray-700">Email: </strong>
-                <span class="text-gray-800">{{ this.userSelected.Email }}</span>
-            </p>
-            <p class="mb-2">
-                <strong class="text-gray-700">Location: </strong>
-                <span class="text-gray-800">{{ this.userSelected.Location }}</span>
-            </p>
-            <p class="mb-2">
-                <strong class="text-gray-700">Employee Level: </strong>
-                <span class="text-gray-800">{{ this.userSelected.level }}</span>
-            </p>
-            <p class="mb-2">
-                <strong class="text-gray-700">Job Family: </strong>
-                <span class="text-gray-800">{{ this.userSelected["Job Family"] }}</span>
-            </p>
-            <p class="mb-2">
-                <strong class="text-gray-700">Agentnoon Entity: </strong>
-                <span class="text-gray-800">{{ this.userSelected.Entity }}</span>
-            </p>
-            <p class="mb-2">
-                <strong class="text-gray-700">Number of Subordinates: </strong>
-                <span class="text-gray-800">{{ this.userSelected.descendants }}</span>
-            </p>
-            <p class="mb-2">
-                <strong class="text-gray-700">Salary: </strong>
-                <span class="text-gray-800">{{ this.userSelected.Salary }}</span>
-            </p>
+        <div v-if="userCardVisible" class="bg-white w-80 p-6 rounded-lg shadow-lg border border-gray-200 text-left">
+            <div v-for="user in this.userSelected" :key="user['Employee Id']" class="user-card">
+                <div class="card">
+                    <div class="card-content">
+                        <p class="mb-2">
+                            <strong class="text-gray-700">Name: </strong>
+                            <span class="text-gray-800">{{ user.Name }}</span>
+                        </p>
+                        <p class="mb-2">
+                            <strong class="text-gray-700">Job Title: </strong>
+                            <span class="text-gray-800">{{ user["Job Title"] }}</span>
+                        </p>
+                        <p class="mb-2">
+                            <strong class="text-gray-700">Email: </strong>
+                            <span class="text-gray-800">{{ user.Email }}</span>
+                        </p>
+                        <p class="mb-2">
+                            <strong class="text-gray-700">Location: </strong>
+                            <span class="text-gray-800">{{ user.Location }}</span>
+                        </p>
+                        <p class="mb-2">
+                            <strong class="text-gray-700">Employee Level: </strong>
+                            <span class="text-gray-800">{{ user.level }}</span>
+                        </p>
+                        <p class="mb-2">
+                            <strong class="text-gray-700">Job Family: </strong>
+                            <span class="text-gray-800">{{ user["Job Family"] }}</span>
+                        </p>
+                        <p class="mb-2">
+                            <strong class="text-gray-700">Agentnoon Entity: </strong>
+                            <span class="text-gray-800">{{ user.Entity }}</span>
+                        </p>
+                        <p class="mb-2">
+                            <strong class="text-gray-700">Number of Subordinates: </strong>
+                            <span class="text-gray-800">{{ user.descendants }}</span>
+                        </p>
+                        <p class="mb-2">
+                            <strong class="text-gray-700">Salary </strong>
+                            <span class="text-gray-800">{{ user.Salary }}</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div v-if="this.userSelected.manage_cost">
+                <p class="mb-2">
+                    <strong class="text-gray-700">IC Cost: </strong>
+                    <span class="text-gray-800">{{ this.userSelected.Salary }}</span>
+                </p>
+
+                <p class="mb-2">
+                    <strong class="text-gray-700">Total Cost: </strong>
+                    <span class="text-gray-800">{{ this.userSelected.Salary }}</span>
+                </p>
+
+                <p class="mb-2">
+                    <strong class="text-gray-700">Management Cost Ratio: </strong>
+                    <span class="text-gray-800">{{ this.userSelected.Salary }}</span>
+                </p>
+            </div>
+
         </div>
     </div>
 </template>
@@ -103,7 +119,7 @@ export default {
     methods: {
         async loadCSV() {
             try {
-                const response = await fetch('/csv_data/larger_data_sample.csv');
+                const response = await fetch('/csv_data/30k_ppl.csv');
                 const csvText = await response.text();
                 this.parseCSV(csvText);
 
@@ -131,7 +147,7 @@ export default {
                             filtered[key] = row.data[key]; // Add only allowed fields to the new object
                             return filtered;
                         }, {});
-                    
+                            
                     filteredData.push(filteredRow);
                 },
                 complete: () => {
@@ -184,10 +200,25 @@ export default {
         },
 
         searchUser() {
-            const user = this.findUser(this.nestedJSON, this.searchQuery);
+            const user = this.findUser(this.nestedJSON, this.searchQuery); //if exact match found
+            let potentialUsers = []
+
+            if (!user) {
+                potentialUsers = this.findPartialMatches(this.nestedJSON, this.searchQuery) //if one or more names matches what was searched
+            }
+            
+            console.log(user, potentialUsers);
+
 
             if (user) {
                 this.userSelected = user;
+                console.log(user);
+                this.userCardVisible = true;
+            }
+            else if (potentialUsers.length > 0) {
+                //set as many "this.userSelected" items are there to display (from array of potential matches)
+                this.userSelected = potentialUsers;
+                console.log(this.userSelected)
                 this.userCardVisible = true;
             }
             else {
@@ -197,7 +228,7 @@ export default {
         },
 
         findUser(node, searchQuery) {
-            if (node.Name === searchQuery) {
+            if (node.Name.toLowerCase() === searchQuery.toLowerCase()) {
                 return node;
             }
             else if (node.children) {
@@ -208,7 +239,28 @@ export default {
                 return result;
             }
             return null;
-        }
+        },
+
+        findPartialMatches(node, searchQuery) {
+            //find partial matches in the tree
+            const allResults = [];
+            const lowerQuery = searchQuery.toLowerCase();
+
+            function searchTree(currentNode) {
+                if (currentNode.Name.toLowerCase().includes(lowerQuery)) {
+                    allResults.push(currentNode);
+                }
+                if (currentNode.children) {
+                    currentNode.children.forEach(child => searchTree(child));
+                }
+            }
+
+            searchTree(node);
+            console.log(allResults);
+            return allResults;
+        },
+
+    
     },
 };
 </script>
@@ -225,12 +277,37 @@ th,td {
     text-align: left;
 }
 
+/* Container for the user cards */
+.user-card-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20px; /* Space between cards */
+  padding: 20px;
+  width: 400px;
+  box-sizing: border-box;
+}
+
+/* Individual card styling */
 .user-card {
-    background-color: white;
-    border: 1px solid #ccc;
-    padding: 16px;
-    margin-top: 16px;
-    border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 20px;
+  width: 400px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px; /* Space below each card */
+  background-color: white;
+  box-sizing: border-box;
+}
+
+
+/* Card content styling */
+.card-content {
+  text-align: left;
+}
+
+/* Ensure text in the card is spaced out */
+.card-content p {
+  margin: 5px 0;
 }
 </style>
