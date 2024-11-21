@@ -1,8 +1,11 @@
 <template>
     <div style="background-color: powderblue;" class="container mx-auto px-4 py-8 text-center">
+        <nav class="w-full flex justify-between items-center bg-dark-blue text-steelblue py-3 px-6 mb-6 shadow-md">
+            <a href="#/" class="font-semibold hover:underline">Home</a>
+            <a href="#/orgchart" class="font-semibold hover:underline">View Org Chart</a>
+        </nav>
+
         <h1 class="text-3xl font-bold text-blue-600 mb-4">Agentnoon Company Organization Chart</h1>
-        <p class="text-sm text-gray-600 mb-6"> Sidenote: Don't refresh this page directly, toggle back/forth between home page
-            (otherwise CSV data won't be accessible).</p>
         <h2 class="text-lg font-semibold text-blue-800 mb-4">Total Organization Headcount:
             <span class="font-bold text-gray-900">{{ this.headcount }}</span>
         </h2>
@@ -100,7 +103,7 @@ text {
     
 }
 
-svg {
+.svg {
     overflow: visible;
 }
 
@@ -170,28 +173,14 @@ export default {
             this.root.x0 = this.svgHeight / 2;
             this.root.y0 = 0;
 
-            this.collapseAll(this.root);
             this.createOrgTree();
+            this.collapseAll(this.root);
             this.updateTree(this.root);
 
             window.addEventListener("resize", this.resize);
 
             this.setCalcVals(this.orgTree);
-        
-            const borderWidth = 5; // Add a border around the tree area
-
-            const svg = d3.select("svg"); // Select the main SVG element
-
-            // Draw the outer border rectangle
-            svg.append("rect")
-                .attr("x", 0)
-                .attr("y", 0)
-                .attr("width", this.svgWidth)
-                .attr("height", this.svgHeight)
-                .attr("fill", "none")
-                .attr("stroke", "steelblue")
-                .attr("stroke-width", borderWidth);
-
+    
         }
         else {
             console.error("Error, no tree found!")
@@ -204,7 +193,6 @@ export default {
 
     methods: {
         createOrgTree() {
-            console.log("creating org tree")
 
             const margin = this.margin;
             const innerWidth = this.svgWidth - margin.left - margin.right;
@@ -217,13 +205,14 @@ export default {
                 .attr("width", this.svgWidth)
                 .attr("height", this.svgHeight)
                 .attr("id", "chart-container")
+                .style("background-color", "skyblue");
 
             // Add a zoomable group
             const g = svg
                 .append("g")
                 .attr("id", "treeGroup")
                 .attr("transform", `translate(${margin.left}, ${margin.top})`);
-
+    
             const zoom = d3
                 .zoom()
                 .scaleExtent([0.2, 2.3]) // Limit zoom levels
@@ -267,7 +256,9 @@ export default {
             nodes
                 .append("circle")
                 .attr("r", 5)
-                .attr("fill", (d) => (d.children || d.temp_children ? "steelblue" : "crimson"))
+                .attr("fill", (d) =>  {
+                    return (d.data.children.length > 0) ? "steelblue" : "crimson"
+                })
                 .on("click", (event, d) => this.onNodeClick(d))
                 .on("mouseover", (event, d) => this.showInfoCard(event, d))
                 .on("mouseout", () => this.hideInfoCard());
@@ -280,11 +271,9 @@ export default {
                 .style("font-size", "12px")
                 .style("font-family", "Arial, sans-serif")
 
-            // Calculate the center of the SVG canvas
             const svgCenterX = this.svgWidth / 2;
             const svgCenterY = this.svgHeight / 2;
 
-            // Calculate the tree's dimensions
             const treeWidth = root_node.y; // Horizontal size of the tree
             const treeHeight = root_node.x; // Vertical size of the tree
 
@@ -299,7 +288,6 @@ export default {
         },
 
         resize() {
-            console.log("resize called!")
             // Update dimensions based on the new window size
             this.svgWidth = window.innerWidth;
             this.svgHeight = window.innerHeight;
@@ -310,7 +298,6 @@ export default {
 
         onNodeClick(d) {
             //toggle visibility for a subtree, allowing for collapsing/expanding as needed
-            console.log("node before:", d);
             if (d.children) {
                 d.temp_children = d.children; // collapse node
                 d.children = null;
@@ -326,7 +313,6 @@ export default {
                 descendant.y0 = descendant.y;
             });
 
-            console.log("node after:", d);
             this.updateTree(d); // Re-render the tree
         },
 
@@ -354,7 +340,10 @@ export default {
             nodeEnter
                 .append("circle")
                 .attr("r", 5)
-                .attr("fill", (d) => (d.children || d._children ? "steelblue" : "crimson"));
+                .attr("fill", (d) =>  {
+    
+                    return (d.data.children.length > 0) ? "steelblue" : "crimson"
+                })
 
             nodeEnter
                 .append("text")
@@ -476,6 +465,8 @@ export default {
             }
             
             this.headcount = 1 + children;
+
+            
         },
 
         formatWithCommas(number) {
