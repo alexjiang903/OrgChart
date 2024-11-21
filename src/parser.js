@@ -1,4 +1,5 @@
-// This helper file aims to parse data from the csv and store it in a json format
+// DEPRECATED!!! DO NOT USE! 
+//This helper file aims to parse data from the csv and store it in a json format
 
 import Papa from 'papaparse';
 import { useDataStore } from './stores/globalDataStore';

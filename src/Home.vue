@@ -207,18 +207,14 @@ export default {
                 potentialUsers = this.findPartialMatches(this.nestedJSON, this.searchQuery) //if one or more names matches what was searched
             }
             
-            console.log(user, potentialUsers);
-
 
             if (user) {
                 this.userSelected = user;
-                console.log(user);
                 this.userCardVisible = true;
             }
             else if (potentialUsers.length > 0) {
                 //set as many "this.userSelected" items are there to display (from array of potential matches)
                 this.userSelected = potentialUsers;
-                console.log(this.userSelected)
                 this.userCardVisible = true;
             }
             else {
@@ -256,7 +252,6 @@ export default {
             }
 
             searchTree(node);
-            console.log(allResults);
             return allResults;
         },
 
@@ -284,7 +279,7 @@ th,td {
   justify-content: space-between;
   gap: 20px; /* Space between cards */
   padding: 20px;
-  width: 400px;
+  width: 350px;
   box-sizing: border-box;
 }
 
@@ -293,7 +288,7 @@ th,td {
   border: 1px solid #ccc;
   border-radius: 10px;
   padding: 20px;
-  width: 400px;
+  width: 350px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px; /* Space below each card */
   background-color: white;
