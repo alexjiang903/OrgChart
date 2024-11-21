@@ -32,6 +32,6 @@ coverage
 .prettierrc*
 eslint*
 jsconfig.json
-vite.config.js
 .editorconfig*
+dump.md
 

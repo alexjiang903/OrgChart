@@ -1,28 +1,41 @@
-// This helper file aims to parse data from the csv and store it in a json format
+// DEPRECATED!!! DO NOT USE! 
+//This helper file aims to parse data from the csv and store it in a json format
 
 import Papa from 'papaparse';
 import { useDataStore } from './stores/globalDataStore';
 
+//import fs from 'fs';
+//var fs = require('fs');
 
-const dataStore = useDataStore();
+// ^ no fs this is reserved for server side processing, can't be used to render data onto a page. 
 
-const filePath = "../csv_data/30k_ppl.csv";
-
-function parseCSV(filePath) {
+function parseCSV() {
     return new Promise((resolve, reject) => {
-        Papa.parse(filePath, {
-            download: true,
-            header: true,
+        console.log("log start")
+        
+        Papa.parse("/csv_data/testing_data2.csv", { // <- is a valid path because parsing starts, but always reads empty...
+          //  header: true,
             worker: true, //enable worker thread for better performance
-            complete: function(results) {
+            delimiter: ',',
+            complete: function(results) {    
+                console.log("log results", results);
+
+                if (results.data.length === 0) {
+                    console.log("no data found!") //This gets triggered ...
+                }
+                
                 const flatData = results.data;
                 const nestedData = flatToNested(flatData);
-
+                const dataStore = useDataStore();
+                    
                 dataStore.setNestedData(nestedData);  //Store the nestedData in Vue global state w/ Pinia
+                    
                 console.log("Nested Data stored in Pinia")
                 console.log("finished processing all 30k employees")
+    
                 resolve(nestedData);
             },
+
             error: function(err) {
                 reject(err);
             }
@@ -65,5 +78,7 @@ function flatToNested(flatData) {
 
     return rootNode;
 }
+
+export default parseCSV;
 
 
